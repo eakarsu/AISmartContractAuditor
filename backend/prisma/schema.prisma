@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  AUDITOR
+  DEVELOPER
+  VIEWER
+}
+
+enum SeverityLevel {
+  INFORMATIONAL
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AuditStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+enum ContractLanguage {
+  SOLIDITY
+  MOVE
+  VYPER
+  RUST
+}
+
+enum ComplianceStandard {
+  ERC20
+  ERC721
+  ERC1155
+  ERC777
+  ERC4626
+  CUSTOM
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  firstName   String
+  lastName    String
+  role        Role     @default(AUDITOR)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lastLoginAt DateTime?
+
+  contracts    SmartContract[]
+  projects     Project[]
+  auditReports AuditReport[]
+  auditHistory AuditHistory[]
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  blockchain  String
+  status      String   @default("active")
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  contracts   SmartContract[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SmartContract {
+  id              String           @id @default(cuid())
+  name            String
+  fileName        String
+  sourceCode      String           @db.Text
+  language        ContractLanguage @default(SOLIDITY)
+  version         String?
+  description     String?
+  projectId       String?
+  project         Project?         @relation(fields: [projectId], references: [id])
+  userId          String
+  user            User             @relation(fields: [userId], references: [id])
+  auditReports    AuditReport[]
+  vulnerabilities Vulnerability[]
+  auditHistory    AuditHistory[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model AuditReport {
+  id                 String        @id @default(cuid())
+  title              String
+  contractId         String
+  contract           SmartContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  userId             String
+  user               User          @relation(fields: [userId], references: [id])
+  status             AuditStatus   @default(PENDING)
+  overallScore       Float?
+  gasScore           Float?
+  securityScore      Float?
+  codeQualityScore   Float?
+  complianceScore    Float?
+  summary            String?       @db.Text
+  gasOptimizations   Json?
+  complianceResults  Json?
+  testCases          Json?
+  codeQualityDetails Json?
+  vulnerabilities    Vulnerability[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+}
+
+model Vulnerability {
+  id             String        @id @default(cuid())
+  contractId     String
+  contract       SmartContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  auditReportId  String?
+  auditReport    AuditReport?  @relation(fields: [auditReportId], references: [id], onDelete: Cascade)
+  title          String
+  description    String        @db.Text
+  severity       SeverityLevel
+  category       String
+  lineNumber     Int?
+  codeSnippet    String?       @db.Text
+  recommendation String?       @db.Text
+  isReentrancy   Boolean       @default(false)
+  status         String        @default("open")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model ComplianceTemplate {
+  id          String             @id @default(cuid())
+  name        String
+  standard    ComplianceStandard
+  description String?            @db.Text
+  rules       Json
+  version     String             @default("1.0")
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model AuditHistory {
+  id         String         @id @default(cuid())
+  action     String
+  contractId String?
+  contract   SmartContract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  userId     String
+  user       User           @relation(fields: [userId], references: [id])
+  input      Json?
+  result     Json?
+  status     AuditStatus    @default(COMPLETED)
+  duration   Int?
+  createdAt  DateTime       @default(now())
+}
