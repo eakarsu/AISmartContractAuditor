@@ -24,6 +24,32 @@ import ComplianceChecking from './pages/ai/ComplianceChecking';
 import TestGeneration from './pages/ai/TestGeneration';
 import CodeQuality from './pages/ai/CodeQuality';
 import ReentrancyDetection from './pages/ai/ReentrancyDetection';
+import AdvancedAnalysis from './pages/ai/AdvancedAnalysis';
+import VulnerabilityList from './pages/VulnerabilityList';
+import AutoFix from './pages/AutoFix';
+import AuditReportPDF from './pages/AuditReportPDF';
+
+// === Batch 07 Gaps & Frontend Mounts ===
+import CfContinuousMonitoringOfDeployedContracts from './pages/CfContinuousMonitoringOfDeployedContracts';
+import CfFormalVerificationIntegration from './pages/CfFormalVerificationIntegration';
+import CfGasOptimizationSimulation from './pages/CfGasOptimizationSimulation';
+import CfComparativeContractAnalysis from './pages/CfComparativeContractAnalysis';
+import CfUpgradePathAdvisor from './pages/CfUpgradePathAdvisor';
+import CfTestGenerationWithCoverage from './pages/CfTestGenerationWithCoverage';
+import GapNoContractpatternrecognitionVulnerablePat from './pages/GapNoContractpatternrecognitionVulnerablePat';
+import GapNoGasestimationDeploymentCostAi from './pages/GapNoGasestimationDeploymentCostAi';
+import GapNoForkanalysisCompareToSimilarContracts from './pages/GapNoForkanalysisCompareToSimilarContracts';
+import GapNoUpgradepathrecommendationProxyPatterns from './pages/GapNoUpgradepathrecommendationProxyPatterns';
+import GapNoFormalverificationsuggestionAi from './pages/GapNoFormalverificationsuggestionAi';
+import GapLimitedContractSourceUploadNoSolidityP from './pages/GapLimitedContractSourceUploadNoSolidityP';
+import GapNoGasOptimizationSimulationEnvironment from './pages/GapNoGasOptimizationSimulationEnvironment';
+import GapNoTestCoverageReporting from './pages/GapNoTestCoverageReporting';
+import GapNoContinuousMonitoringOfDeployedContrac from './pages/GapNoContinuousMonitoringOfDeployedContrac';
+import GapNoRemediationTrackingVulnerabilityCloseo from './pages/GapNoRemediationTrackingVulnerabilityCloseo';
+import GapNoMultichainSupportEvmonlyAssumed from './pages/GapNoMultichainSupportEvmonlyAssumed';
+import GapNoNotificationswebhookForFindings from './pages/GapNoNotificationswebhookForFindings';
+// === End Batch 07 ===
+
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
@@ -61,7 +87,31 @@ function AppRoutes() {
         <Route path="test-generation" element={<TestGeneration />} />
         <Route path="code-quality" element={<CodeQuality />} />
         <Route path="reentrancy-detection" element={<ReentrancyDetection />} />
+        <Route path="advanced-analysis" element={<AdvancedAnalysis />} />
+        <Route path="vulnerabilities" element={<VulnerabilityList />} />
+        <Route path="auto-fix/:vulnerabilityId" element={<AutoFix />} />
+        <Route path="audit-pdf" element={<AuditReportPDF />} />
       </Route>
+          // === Batch 07 Gaps & Frontend Mounts ===
+          <Route path='/cf-continuous-monitoring-of-deployed-contracts' element={<CfContinuousMonitoringOfDeployedContracts />} />
+          <Route path='/cf-formal-verification-integration' element={<CfFormalVerificationIntegration />} />
+          <Route path='/cf-gas-optimization-simulation' element={<CfGasOptimizationSimulation />} />
+          <Route path='/cf-comparative-contract-analysis' element={<CfComparativeContractAnalysis />} />
+          <Route path='/cf-upgrade-path-advisor' element={<CfUpgradePathAdvisor />} />
+          <Route path='/cf-test-generation-with-coverage' element={<CfTestGenerationWithCoverage />} />
+          <Route path='/gap-no-contractpatternrecognition-vulnerable-pat' element={<GapNoContractpatternrecognitionVulnerablePat />} />
+          <Route path='/gap-no-gasestimation-deployment-cost-ai' element={<GapNoGasestimationDeploymentCostAi />} />
+          <Route path='/gap-no-forkanalysis-compare-to-similar-contracts' element={<GapNoForkanalysisCompareToSimilarContracts />} />
+          <Route path='/gap-no-upgradepathrecommendation-proxy-patterns' element={<GapNoUpgradepathrecommendationProxyPatterns />} />
+          <Route path='/gap-no-formalverificationsuggestion-ai' element={<GapNoFormalverificationsuggestionAi />} />
+          <Route path='/gap-limited-contract-source-upload-no-solidity-p' element={<GapLimitedContractSourceUploadNoSolidityP />} />
+          <Route path='/gap-no-gas-optimization-simulation-environment' element={<GapNoGasOptimizationSimulationEnvironment />} />
+          <Route path='/gap-no-test-coverage-reporting' element={<GapNoTestCoverageReporting />} />
+          <Route path='/gap-no-continuous-monitoring-of-deployed-contrac' element={<GapNoContinuousMonitoringOfDeployedContrac />} />
+          <Route path='/gap-no-remediation-tracking-vulnerability-closeo' element={<GapNoRemediationTrackingVulnerabilityCloseo />} />
+          <Route path='/gap-no-multichain-support-evmonly-assumed' element={<GapNoMultichainSupportEvmonlyAssumed />} />
+          <Route path='/gap-no-notificationswebhook-for-findings' element={<GapNoNotificationswebhookForFindings />} />
+          // === End Batch 07 ===
     </Routes>
   );
 }
