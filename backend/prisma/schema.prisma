@@ -132,8 +132,23 @@ model Vulnerability {
   recommendation String?       @db.Text
   isReentrancy   Boolean       @default(false)
   status         String        @default("open")
+  fixes          Fix[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+}
+
+model Fix {
+  id              String        @id @default(cuid())
+  vulnerabilityId String
+  vulnerability   Vulnerability @relation(fields: [vulnerabilityId], references: [id], onDelete: Cascade)
+  originalCode    String?       @db.Text
+  patchedCode     String?       @db.Text
+  explanation     String?       @db.Text
+  diffSummary     String?       @db.Text
+  scanResult      Json?
+  status          String        @default("suggested") // suggested, applied, rejected
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
 model ComplianceTemplate {

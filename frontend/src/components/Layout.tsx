@@ -3,7 +3,8 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, FileCode, Shield, FolderOpen, ClipboardList, History,
-  Search, Fuel, CheckCircle, TestTube, Star, Lock, LogOut, Menu, X, ChevronDown, ChevronRight
+  Search, Fuel, CheckCircle, TestTube, Star, Lock, LogOut, Menu, X, ChevronDown, ChevronRight,
+  AlertTriangle, Wrench, FileText, Layers
 } from 'lucide-react';
 
 const navGroups = [
@@ -32,6 +33,15 @@ const navGroups = [
       { to: '/test-generation', icon: TestTube, label: 'Test Generation' },
       { to: '/code-quality', icon: Star, label: 'Code Quality' },
       { to: '/reentrancy-detection', icon: Lock, label: 'Reentrancy Detection' },
+      { to: '/advanced-analysis', icon: Layers, label: 'Advanced Analysis' },
+    ],
+  },
+  {
+    label: 'Security Center',
+    items: [
+      { to: '/vulnerabilities', icon: AlertTriangle, label: 'Vulnerability List' },
+      { to: '/audit-pdf', icon: FileText, label: 'PDF Reports' },
+      { to: '/custom-views', icon: Layers, label: 'Security Views' },
     ],
   },
 ];
