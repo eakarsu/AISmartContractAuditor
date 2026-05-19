@@ -28,6 +28,9 @@ import AdvancedAnalysis from './pages/ai/AdvancedAnalysis';
 import VulnerabilityList from './pages/VulnerabilityList';
 import AutoFix from './pages/AutoFix';
 import AuditReportPDF from './pages/AuditReportPDF';
+// === Custom Views (bespoke) ===
+// @ts-ignore - bespoke .js page
+import CustomViewsPage from './pages/CustomViewsPage';
 
 // === Batch 07 Gaps & Frontend Mounts ===
 import CfContinuousMonitoringOfDeployedContracts from './pages/CfContinuousMonitoringOfDeployedContracts';
@@ -91,6 +94,7 @@ function AppRoutes() {
         <Route path="vulnerabilities" element={<VulnerabilityList />} />
         <Route path="auto-fix/:vulnerabilityId" element={<AutoFix />} />
         <Route path="audit-pdf" element={<AuditReportPDF />} />
+        <Route path="custom-views" element={<CustomViewsPage />} />
       </Route>
           // === Batch 07 Gaps & Frontend Mounts ===
           <Route path='/cf-continuous-monitoring-of-deployed-contracts' element={<CfContinuousMonitoringOfDeployedContracts />} />

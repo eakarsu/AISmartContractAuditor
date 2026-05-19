@@ -41,6 +41,7 @@ const navGroups = [
     items: [
       { to: '/vulnerabilities', icon: AlertTriangle, label: 'Vulnerability List' },
       { to: '/audit-pdf', icon: FileText, label: 'PDF Reports' },
+      { to: '/custom-views', icon: Layers, label: 'Security Views' },
     ],
   },
 ];

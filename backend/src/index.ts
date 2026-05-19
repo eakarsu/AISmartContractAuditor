@@ -87,3 +87,8 @@ app.use('/api/gap-no-remediation-tracking-vulnerability-closeo', _b07_no_remedia
 app.use('/api/gap-no-multichain-support-evmonly-assumed', _b07_no_multichain_support_evmonly_assumed);
 app.use('/api/gap-no-notificationswebhook-for-findings', _b07_no_notificationswebhook_for_findings);
 // === End Batch 07 mounts ===
+
+// === Custom Views (bespoke) ===
+import customViewsRoutes from './routes/customViews';
+app.use('/api/custom-views', customViewsRoutes);
+// === End Custom Views ===
