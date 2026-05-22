@@ -92,3 +92,5 @@ app.use('/api/gap-no-notificationswebhook-for-findings', _b07_no_notificationswe
 import customViewsRoutes from './routes/customViews';
 app.use('/api/custom-views', customViewsRoutes);
 // === End Custom Views ===
+import oracleDependencyRiskRoutes from './routes/oracleDependencyRisk';
+app.use('/api/oracle-dependency-risk', oracleDependencyRiskRoutes);

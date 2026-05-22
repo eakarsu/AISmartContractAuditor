@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, FileCode, Shield, FolderOpen, ClipboardList, History,
   Search, Fuel, CheckCircle, TestTube, Star, Lock, LogOut, Menu, X, ChevronDown, ChevronRight,
-  AlertTriangle, Wrench, FileText, Layers
+  AlertTriangle, Wrench, FileText, Layers, GitBranch, Zap, GitFork, ArrowUpCircle,
+  FlaskConical, Upload, Gauge, TestTube2, Radio, ShieldCheck, Globe, Bell
 } from 'lucide-react';
 
 const navGroups = [
@@ -42,6 +43,24 @@ const navGroups = [
       { to: '/vulnerabilities', icon: AlertTriangle, label: 'Vulnerability List' },
       { to: '/audit-pdf', icon: FileText, label: 'PDF Reports' },
       { to: '/custom-views', icon: Layers, label: 'Security Views' },
+      { to: '/oracle-dependency-risk', icon: Radio, label: 'Oracle Risk' },
+    ],
+  },
+  {
+    label: 'Gap Features',
+    items: [
+      { to: '/gap-no-contractpatternrecognition-vulnerable-pat', icon: GitBranch, label: 'Pattern Recognition' },
+      { to: '/gap-no-gasestimation-deployment-cost-ai', icon: Zap, label: 'Gas Estimation AI' },
+      { to: '/gap-no-forkanalysis-compare-to-similar-contracts', icon: GitFork, label: 'Fork Analysis' },
+      { to: '/gap-no-upgradepathrecommendation-proxy-patterns', icon: ArrowUpCircle, label: 'Upgrade Path AI' },
+      { to: '/gap-no-formalverificationsuggestion-ai', icon: FlaskConical, label: 'Formal Verification AI' },
+      { to: '/gap-limited-contract-source-upload-no-solidity-p', icon: Upload, label: 'Contract Upload' },
+      { to: '/gap-no-gas-optimization-simulation-environment', icon: Gauge, label: 'Gas Simulation' },
+      { to: '/gap-no-test-coverage-reporting', icon: TestTube2, label: 'Test Coverage' },
+      { to: '/gap-no-continuous-monitoring-of-deployed-contrac', icon: Radio, label: 'Continuous Monitor' },
+      { to: '/gap-no-remediation-tracking-vulnerability-closeo', icon: ShieldCheck, label: 'Remediation Tracking' },
+      { to: '/gap-no-multichain-support-evmonly-assumed', icon: Globe, label: 'Multichain Support' },
+      { to: '/gap-no-notificationswebhook-for-findings', icon: Bell, label: 'Notifications / Webhooks' },
     ],
   },
 ];

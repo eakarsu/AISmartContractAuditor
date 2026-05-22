@@ -28,6 +28,7 @@ import AdvancedAnalysis from './pages/ai/AdvancedAnalysis';
 import VulnerabilityList from './pages/VulnerabilityList';
 import AutoFix from './pages/AutoFix';
 import AuditReportPDF from './pages/AuditReportPDF';
+import OracleDependencyRisk from './pages/OracleDependencyRisk';
 // === Custom Views (bespoke) ===
 // @ts-ignore - bespoke .js page
 import CustomViewsPage from './pages/CustomViewsPage';
@@ -51,6 +52,9 @@ import GapNoContinuousMonitoringOfDeployedContrac from './pages/GapNoContinuousM
 import GapNoRemediationTrackingVulnerabilityCloseo from './pages/GapNoRemediationTrackingVulnerabilityCloseo';
 import GapNoMultichainSupportEvmonlyAssumed from './pages/GapNoMultichainSupportEvmonlyAssumed';
 import GapNoNotificationswebhookForFindings from './pages/GapNoNotificationswebhookForFindings';
+import CodexCustomVizFeature from './pages/CodexCustomVizFeature';
+import CodexOperationsFeature from './pages/CodexOperationsFeature';
+
 // === End Batch 07 ===
 
 
@@ -62,6 +66,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 function AppRoutes() {
   return (
     <Routes>
+        <Route path="/codex/custom-viz" element={<ProtectedRoute><CodexCustomVizFeature /></ProtectedRoute>} />
+        <Route path="/codex/operations" element={<ProtectedRoute><CodexOperationsFeature /></ProtectedRoute>} />
+
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/dashboard" />} />
@@ -95,8 +102,9 @@ function AppRoutes() {
         <Route path="auto-fix/:vulnerabilityId" element={<AutoFix />} />
         <Route path="audit-pdf" element={<AuditReportPDF />} />
         <Route path="custom-views" element={<CustomViewsPage />} />
+        <Route path="oracle-dependency-risk" element={<OracleDependencyRisk />} />
       </Route>
-          // === Batch 07 Gaps & Frontend Mounts ===
+          {/* === Batch 07 Gaps & Frontend Mounts === */}
           <Route path='/cf-continuous-monitoring-of-deployed-contracts' element={<CfContinuousMonitoringOfDeployedContracts />} />
           <Route path='/cf-formal-verification-integration' element={<CfFormalVerificationIntegration />} />
           <Route path='/cf-gas-optimization-simulation' element={<CfGasOptimizationSimulation />} />
@@ -115,7 +123,7 @@ function AppRoutes() {
           <Route path='/gap-no-remediation-tracking-vulnerability-closeo' element={<GapNoRemediationTrackingVulnerabilityCloseo />} />
           <Route path='/gap-no-multichain-support-evmonly-assumed' element={<GapNoMultichainSupportEvmonlyAssumed />} />
           <Route path='/gap-no-notificationswebhook-for-findings' element={<GapNoNotificationswebhookForFindings />} />
-          // === End Batch 07 ===
+          {/* === End Batch 07 === */}
     </Routes>
   );
 }
