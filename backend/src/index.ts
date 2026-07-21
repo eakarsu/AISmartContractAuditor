@@ -3,17 +3,6 @@ import path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 // Validate env vars at startup
-if (!process.env.DATABASE_URL) {
-  console.error('FATAL: DATABASE_URL is required');
-  process.exit(1);
-}
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'secret') {
-  console.warn('WARNING: JWT_SECRET is weak or not set. Set a strong secret in .env');
-}
-if (!process.env.OPENROUTER_API_KEY) {
-  console.warn('WARNING: OPENROUTER_API_KEY not set. AI features will fail.');
-}
-
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -28,6 +17,10 @@ import complianceTemplateRoutes from './routes/complianceTemplates';
 import auditHistoryRoutes from './routes/auditHistory';
 import dashboardRoutes from './routes/dashboard';
 import aiRoutes from './routes/ai';
+import contractWorkflowRoutes from './routes/contractWorkflow';
+import { authenticate } from './middleware/auth';
+import './config/security';
+import prisma from './lib/prisma';
 
 const app = express();
 const PORT = process.env.BACKEND_PORT || 4000;
@@ -38,6 +31,13 @@ app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
 
 app.use('/api/auth', authRoutes);
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+app.use('/api/contract-workflow', contractWorkflowRoutes);
+app.use(/^\/api\/(?:gap-|ai(?:\/|$)|ai-)/, authenticate, (_req, res) => res.status(503).json({
+  error: 'Generated AI and gap routes are quarantined; use /api/contract-workflow', retryable: false,
+}));
 app.use('/api/contracts', contractRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/audits', auditRoutes);
@@ -45,16 +45,6 @@ app.use('/api/compliance-templates', complianceTemplateRoutes);
 app.use('/api/audit-history', auditHistoryRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/ai', aiRoutes); // Rate limiter applied inside aiRoutes
-
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-app.use(errorHandler);
-
-app.listen(PORT, () => {
-  console.log(`Backend server running on http://localhost:${PORT}`);
-});
 
 // AI feature mount: continuous-monitor
 import aiContinuousmonitorRoutes from './routes/ai-continuous-monitor';
@@ -94,3 +84,7 @@ app.use('/api/custom-views', customViewsRoutes);
 // === End Custom Views ===
 import oracleDependencyRiskRoutes from './routes/oracleDependencyRisk';
 app.use('/api/oracle-dependency-risk', oracleDependencyRiskRoutes);
+
+app.use(errorHandler);
+async function start(){if(process.env.NODE_ENV==='production'){const rows:any[]=await prisma.$queryRawUnsafe("SELECT to_regclass('public.contract_audit_cases')::text AS workflow_table");if(!rows[0]?.workflow_table)throw new Error('Database migrations are required; run ./scripts/migrate.sh');}else{await prisma.user.count();}app.listen(PORT,()=>console.log(`Backend server running on http://localhost:${PORT}`));}
+start().catch(error=>{console.error('Failed to start server:',error.message);process.exitCode=1;});

@@ -1,0 +1,14 @@
+name: workflow-policy
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node --test backend/test/*.test.cjs
+      - run: node --check backend/domain/contractPolicy.cjs
+      - run: bash -n start.sh scripts/migrate.sh
+      - run: grep -q '^BEGIN;' backend/prisma/migrations/*/migration.sql && grep -q '^COMMIT;' backend/prisma/migrations/*/migration.sql
+      - run: npm ci --prefix backend && npm --prefix backend run build

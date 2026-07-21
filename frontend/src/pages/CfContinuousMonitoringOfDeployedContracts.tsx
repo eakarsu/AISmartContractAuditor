@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 
 export default function CfContinuousMonitoringOfDeployedContracts() {
   const [input, setInput] = useState('');
-  const [output, setOutput] = useState(null);
+  const [output, setOutput] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const sampleRequests = [
       {
@@ -22,7 +22,7 @@ export default function CfContinuousMonitoringOfDeployedContracts() {
       }
   ];
 
-  const applySampleRequest = (value) => {
+  const applySampleRequest = (value: string) => {
     setInput(value);
     setError(null);
   };
@@ -44,7 +44,7 @@ export default function CfContinuousMonitoringOfDeployedContracts() {
       if (!res.ok) throw new Error((data && data.error) || res.statusText);
       setOutput(data);
     } catch (e) {
-      setError(e && e.message ? e.message : 'Request failed');
+      setError(e instanceof Error ? e.message : 'Request failed');
     } finally {
       setLoading(false);
     }
@@ -82,7 +82,7 @@ export default function CfContinuousMonitoringOfDeployedContracts() {
       {error && (
         <div style={{ marginTop: 16, padding: 12, background: '#fee', color: '#900', borderRadius: 6 }}>{error}</div>
       )}
-      {output && (
+      {output !== null && (
         <pre style={{ marginTop: 16, padding: 12, background: '#f7f7f7', borderRadius: 6, overflow: 'auto', maxHeight: 480 }}>
 {JSON.stringify(output, null, 2)}
         </pre>

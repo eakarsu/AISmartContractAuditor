@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import { jwtSecret } from '../config/security';
 
 const router = Router();
 
@@ -27,7 +28,7 @@ router.post('/login', async (req: Request, res: Response) => {
 
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'secret',
+      jwtSecret,
       { expiresIn: '24h' } as any
     );
 
@@ -40,9 +41,9 @@ router.post('/login', async (req: Request, res: Response) => {
 
 router.post('/register', async (req: Request, res: Response) => {
   try {
-    const { email, password, firstName, lastName, role } = req.body;
-    if (!email || !password || !firstName || !lastName) {
-      return res.status(400).json({ error: 'All fields required' });
+    const { email, password, firstName, lastName } = req.body;
+    if (!email || !password || password.length < 12 || !firstName || !lastName) {
+      return res.status(400).json({ error: 'All fields and a password of at least 12 characters are required' });
     }
 
     const existing = await prisma.user.findUnique({ where: { email } });
@@ -52,7 +53,7 @@ router.post('/register', async (req: Request, res: Response) => {
 
     const hashed = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { email, password: hashed, firstName, lastName, role: role || 'AUDITOR' },
+      data: { email, password: hashed, firstName, lastName, role: 'VIEWER' },
     });
 
     const { password: _, ...userWithoutPassword } = user;

@@ -28,6 +28,8 @@ const solidityContracts = [
 ];
 
 async function seed() {
+  if (process.env.ALLOW_DESTRUCTIVE_SEED !== 'true') throw new Error('Set ALLOW_DESTRUCTIVE_SEED=true to run the destructive seed explicitly');
+  if (!process.env.SEED_ADMIN_PASSWORD || process.env.SEED_ADMIN_PASSWORD.length < 12) throw new Error('SEED_ADMIN_PASSWORD must contain at least 12 characters');
   console.log('🌱 Seeding database...');
 
   // Clean existing data
@@ -40,7 +42,7 @@ async function seed() {
   await prisma.user.deleteMany();
 
   // Create users
-  const hashedPassword = await bcrypt.hash('password', 10);
+  const hashedPassword = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD, 12);
   const admin = await prisma.user.create({
     data: { email: 'admin@auditor.com', password: hashedPassword, firstName: 'Admin', lastName: 'User', role: 'ADMIN' },
   });
