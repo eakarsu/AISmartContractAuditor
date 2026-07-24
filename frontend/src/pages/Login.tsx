@@ -26,8 +26,8 @@ export default function Login() {
   };
 
   const autoFill = () => {
-    setEmail('admin@auditor.com');
-    setPassword('password');
+    setEmail(import.meta.env.VITE_DEMO_EMAIL || '');
+    setPassword(import.meta.env.VITE_DEMO_PASSWORD || '');
   };
 
   return (
