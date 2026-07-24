@@ -35,7 +35,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 app.use('/api/contract-workflow', contractWorkflowRoutes);
-app.use(/^\/api\/(?:gap-|ai(?:\/|$)|ai-)/, authenticate, (_req, res) => res.status(503).json({
+app.use(/^\/api\/(?:gap-|ai-)/, authenticate, (_req, res) => res.status(503).json({
   error: 'Generated AI and gap routes are quarantined; use /api/contract-workflow', retryable: false,
 }));
 app.use('/api/contracts', contractRoutes);

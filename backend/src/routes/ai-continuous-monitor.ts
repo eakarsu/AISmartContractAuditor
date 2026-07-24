@@ -2,7 +2,7 @@
 // Watch contract behavior post-audit, alert on suspicious patterns
 import express, { Request, Response } from 'express';
 import { authenticate, AuthRequest } from '../middleware/auth';
-// prisma optional
+import prisma from '../lib/prisma';
 
 const router = express.Router();
 const MODEL = process.env.OPENROUTER_MODEL || 'anthropic/claude-3-5-sonnet-20241022';
@@ -32,7 +32,9 @@ async function callLLM(systemPrompt: string, userPrompt: string) {
   });
   if (!response.ok) return { success: false, error: `LLM error ${response.status}` } as const;
   const data: any = await response.json();
-  return { success: true, content: data?.choices?.[0]?.message?.content || '' } as const;
+  const content = data?.choices?.[0]?.message?.content?.trim();
+  if (!content) return { success: false, error: 'OpenRouter returned no substantive content' } as const;
+  return { success: true, content } as const;
 }
 
 function parseJsonLoose(text: string): any {
@@ -56,6 +58,10 @@ router.post('/', async (req: any, res: Response) => {
     const llm = await callLLM(systemPrompt, userPrompt);
     if (!llm.success) return res.status(503).json({ error: llm.error });
     const parsed = parseJsonLoose(llm.content) || { raw: llm.content };
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO runtime_contract_ai_results (user_id,feature,input,output,model) VALUES ($1,$2,$3::jsonb,$4::jsonb,$5)`,
+      req.user.id, 'continuous-monitor', JSON.stringify(context), JSON.stringify(parsed), MODEL
+    );
     res.json({ feature: 'continuous-monitor', model: MODEL, result: parsed });
   } catch (err: any) {
     console.error('[continuous-monitor]', err?.message);
@@ -64,5 +70,17 @@ router.post('/', async (req: any, res: Response) => {
 });
 
 router.get('/health', (_req, res) => res.json({ ok: true, feature: 'continuous-monitor' }));
+
+router.get('/history', async (req: any, res: Response) => {
+  try {
+    const rows: any[] = await prisma.$queryRawUnsafe(
+      `SELECT id::text,feature,output,model,created_at FROM runtime_contract_ai_results WHERE user_id=$1 ORDER BY created_at DESC LIMIT 50`,
+      req.user.id
+    );
+    res.json({ items: rows });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 export default router;

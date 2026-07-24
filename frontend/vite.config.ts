@@ -17,10 +17,10 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3517,
+    port: Number(process.env.FRONTEND_PORT || 3517),
     proxy: {
       '/api': {
-        target: 'http://localhost:4517',
+        target: process.env.VITE_API_URL || 'http://localhost:4517',
         changeOrigin: true,
       },
     },
