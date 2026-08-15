@@ -45,6 +45,7 @@ out/
 .nuxt/
 .vite/
 .turbo/
+*.tsbuildinfo
 *.log
 
 # OS / IDE
