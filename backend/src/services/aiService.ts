@@ -47,6 +47,11 @@ async function makeRequest(systemPrompt: string, userPrompt: string): Promise<an
 }
 
 export class AIService {
+  static async analyzeGeneratedFeature(title: string, input: string) {
+    const systemPrompt = `You are a senior smart-contract security analyst providing decision support for: ${title}. Return only valid JSON with summary, confidence, key_findings, risks, prioritized_actions, assumptions, missing_information, and follow_up_questions. Use only supplied evidence. Do not claim that code was deployed, a chain was queried, a transaction was executed, or a vulnerability was remediated. Human auditors retain responsibility for security conclusions.`;
+    return makeRequest(systemPrompt, input);
+  }
+
   static async scanVulnerabilities(sourceCode: string, language: string = 'Solidity') {
     const systemPrompt = `You are an expert smart contract security auditor. Analyze the provided ${language} smart contract for security vulnerabilities. Return a JSON object with this exact structure:
 {

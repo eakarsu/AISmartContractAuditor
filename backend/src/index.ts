@@ -17,6 +17,7 @@ import complianceTemplateRoutes from './routes/complianceTemplates';
 import auditHistoryRoutes from './routes/auditHistory';
 import dashboardRoutes from './routes/dashboard';
 import aiRoutes from './routes/ai';
+import generatedFeaturesRoutes from './routes/generatedFeatures';
 import contractWorkflowRoutes from './routes/contractWorkflow';
 import { authenticate } from './middleware/auth';
 import './config/security';
@@ -35,6 +36,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 app.use('/api/contract-workflow', contractWorkflowRoutes);
+app.use('/api', generatedFeaturesRoutes);
 app.use(/^\/api\/(?:gap-|ai-)/, authenticate, (_req, res) => res.status(503).json({
   error: 'Generated AI and gap routes are quarantined; use /api/contract-workflow', retryable: false,
 }));

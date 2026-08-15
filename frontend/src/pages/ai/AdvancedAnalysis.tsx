@@ -1,3 +1,4 @@
+import GeneratedAiResponse from '../GeneratedAiResponse';
 import React, { useEffect, useState } from 'react';
 import api from '../../api/client';
 import { Layers, Loader2 } from 'lucide-react';
@@ -271,9 +272,7 @@ export default function AdvancedAnalysis() {
       {result && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-3">Result</h2>
-          <pre className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs overflow-x-auto whitespace-pre-wrap break-words">
-            {JSON.stringify(result, null, 2)}
-          </pre>
+          <GeneratedAiResponse response={result} />
         </div>
       )}
     </div>
