@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import NativeSourcePresets, { sourceExamples } from '../../components/NativeSourcePresets';
 import api from '../../api/client';
 import { Lock, Loader2 } from 'lucide-react';
-import { ReentrancyDetectionResult } from '../../components/AIResultDisplay';
+import GeneratedAiResponse from '../GeneratedAiResponse';
 
 export default function ReentrancyDetection() {
   const [contracts, setContracts] = useState<any[]>([]);
@@ -17,6 +18,13 @@ export default function ReentrancyDetection() {
     setContractId(id);
     const c = contracts.find(c => c.id === id);
     if (c) setSourceCode(c.sourceCode);
+  };
+
+  const fillExample = (index: number) => {
+    const selected = contracts.find(c => String(c.id) === String(contractId));
+    if (!selected) { setContractId(''); setSourceCode(sourceExamples[index].source); }
+    else { setSourceCode(selected.sourceCode); }
+    setResult(null); setError('');
   };
 
   const handleSubmit = async () => {
@@ -36,6 +44,7 @@ export default function ReentrancyDetection() {
         <p className="text-gray-500 mt-1">Specialized AI detection of reentrancy attack patterns</p>
       </div>
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <NativeSourcePresets disabled={loading} onFill={fillExample} />
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">Select Contract</label>
           <select value={contractId} onChange={e => handleContractSelect(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
@@ -56,7 +65,7 @@ export default function ReentrancyDetection() {
         </button>
       </div>
       {error && <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">{error}</div>}
-      {result && <ReentrancyDetectionResult data={result} />}
+      {result && <GeneratedAiResponse response={result} />}
     </div>
   );
 }

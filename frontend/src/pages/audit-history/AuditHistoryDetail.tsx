@@ -2,10 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/client';
 import { ArrowLeft } from 'lucide-react';
-import {
-  VulnerabilityScanResult, GasOptimizationResult, ComplianceCheckResult,
-  TestGenerationResult, CodeQualityResult, ReentrancyDetectionResult, GenericAIResult
-} from '../../components/AIResultDisplay';
+import GeneratedAiResponse from '../GeneratedAiResponse';
 
 const actionLabels: Record<string, string> = {
   vulnerability_scan: 'Vulnerability Scan', gas_optimization: 'Gas Optimization',
@@ -13,14 +10,6 @@ const actionLabels: Record<string, string> = {
   code_quality: 'Code Quality', reentrancy_detection: 'Reentrancy Detection',
 };
 
-const ResultComponents: Record<string, React.FC<{ data: any }>> = {
-  vulnerability_scan: VulnerabilityScanResult,
-  gas_optimization: GasOptimizationResult,
-  compliance_check: ComplianceCheckResult,
-  test_generation: TestGenerationResult,
-  code_quality: CodeQualityResult,
-  reentrancy_detection: ReentrancyDetectionResult,
-};
 
 export default function AuditHistoryDetail() {
   const { id } = useParams();
@@ -31,7 +20,6 @@ export default function AuditHistoryDetail() {
 
   if (!entry) return <div className="text-center py-8 text-gray-500">Loading...</div>;
 
-  const ResultComponent = ResultComponents[entry.action] || GenericAIResult;
 
   return (
     <div>
@@ -47,10 +35,10 @@ export default function AuditHistoryDetail() {
         </div>
       </div>
 
-      {entry.result && (
+      {entry.result !== null && entry.result !== undefined && (
         <div>
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Results</h2>
-          <ResultComponent data={entry.result} />
+          <GeneratedAiResponse response={entry.result} />
         </div>
       )}
     </div>

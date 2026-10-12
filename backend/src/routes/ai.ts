@@ -537,8 +537,19 @@ router.get('/audit-pdf/:id', async (req: AuthRequest, res: Response) => {
   }
 });
 
+type AdvancedRequest = AuthRequest & { aiSignal?: AbortSignal };
+const advancedPaths = new Set(['/contract-pattern-recognition', '/gas-estimation', '/fork-analysis', '/upgrade-path-recommendation', '/formal-verification-suggestion']);
+router.use((req: AdvancedRequest, res, next) => {
+  if (req.method !== 'POST' || !advancedPaths.has(req.path)) return next();
+  const controller = new AbortController(); req.aiSignal = controller.signal;
+  const abort = () => controller.abort();
+  const close = () => { if (!res.writableEnded) abort(); };
+  const cleanup = () => { req.off('aborted', abort); res.off('close', close); res.off('finish', cleanup); };
+  req.once('aborted', abort); res.once('close', close); res.once('finish', cleanup); next();
+});
+
 // ─── POST /api/ai/contract-pattern-recognition ────────────────────────────────
-router.post('/contract-pattern-recognition', async (req: AuthRequest, res: Response) => {
+router.post('/contract-pattern-recognition', async (req: AdvancedRequest, res: Response) => {
   try {
     const { contractId, sourceCode, language } = req.body || {};
     let code = sourceCode;
@@ -550,16 +561,18 @@ router.post('/contract-pattern-recognition', async (req: AuthRequest, res: Respo
       resolvedContractId = c.id;
     }
     if (!code) return res.status(400).json({ error: 'sourceCode or contractId is required' });
-    const result = await AIService.recognizePatterns(code, language || 'Solidity');
+    const result = await AIService.recognizePatterns(code, language || 'Solidity', req.aiSignal);
+    req.aiSignal?.throwIfAborted();
     res.json({ contractId: resolvedContractId, result });
   } catch (error: any) {
+    if (req.aiSignal?.aborted) return;
     console.error('contract-pattern-recognition error:', error);
-    res.status(500).json({ error: error.message || 'Pattern recognition failed' });
+    res.status(error.status === 503 ? 503 : 502).json({ error: error.message || 'Pattern recognition failed' });
   }
 });
 
 // ─── POST /api/ai/gas-estimation ───────────────────────────────────────────────
-router.post('/gas-estimation', async (req: AuthRequest, res: Response) => {
+router.post('/gas-estimation', async (req: AdvancedRequest, res: Response) => {
   try {
     const { contractId, sourceCode, expectedFunctions } = req.body || {};
     let code = sourceCode;
@@ -571,16 +584,18 @@ router.post('/gas-estimation', async (req: AuthRequest, res: Response) => {
       resolvedContractId = c.id;
     }
     if (!code) return res.status(400).json({ error: 'sourceCode or contractId is required' });
-    const result = await AIService.estimateGas(code, Array.isArray(expectedFunctions) ? expectedFunctions : []);
+    const result = await AIService.estimateGas(code, Array.isArray(expectedFunctions) ? expectedFunctions : [], req.aiSignal);
+    req.aiSignal?.throwIfAborted();
     res.json({ contractId: resolvedContractId, result });
   } catch (error: any) {
+    if (req.aiSignal?.aborted) return;
     console.error('gas-estimation error:', error);
-    res.status(500).json({ error: error.message || 'Gas estimation failed' });
+    res.status(error.status === 503 ? 503 : 502).json({ error: error.message || 'Gas estimation failed' });
   }
 });
 
 // ─── POST /api/ai/fork-analysis ────────────────────────────────────────────────
-router.post('/fork-analysis', async (req: AuthRequest, res: Response) => {
+router.post('/fork-analysis', async (req: AdvancedRequest, res: Response) => {
   try {
     const { contractId, sourceCode, similarContractName } = req.body || {};
     let code = sourceCode;
@@ -592,16 +607,18 @@ router.post('/fork-analysis', async (req: AuthRequest, res: Response) => {
       resolvedContractId = c.id;
     }
     if (!code) return res.status(400).json({ error: 'sourceCode or contractId is required' });
-    const result = await AIService.forkAnalysis(code, similarContractName || '');
+    const result = await AIService.forkAnalysis(code, similarContractName || '', req.aiSignal);
+    req.aiSignal?.throwIfAborted();
     res.json({ contractId: resolvedContractId, result });
   } catch (error: any) {
+    if (req.aiSignal?.aborted) return;
     console.error('fork-analysis error:', error);
-    res.status(500).json({ error: error.message || 'Fork analysis failed' });
+    res.status(error.status === 503 ? 503 : 502).json({ error: error.message || 'Fork analysis failed' });
   }
 });
 
 // ─── POST /api/ai/upgrade-path-recommendation ─────────────────────────────────
-router.post('/upgrade-path-recommendation', async (req: AuthRequest, res: Response) => {
+router.post('/upgrade-path-recommendation', async (req: AdvancedRequest, res: Response) => {
   try {
     if (!process.env.OPENROUTER_API_KEY) {
       return res.status(503).json({ error: 'AI provider not configured. Set OPENROUTER_API_KEY in backend/.env to enable this endpoint.' });
@@ -616,16 +633,18 @@ router.post('/upgrade-path-recommendation', async (req: AuthRequest, res: Respon
       resolvedContractId = c.id;
     }
     if (!code) return res.status(400).json({ error: 'sourceCode or contractId is required' });
-    const result = await AIService.upgradePathRecommendation(code, currentPattern, targetGoal);
+    const result = await AIService.upgradePathRecommendation(code, currentPattern, targetGoal, req.aiSignal);
+    req.aiSignal?.throwIfAborted();
     res.json({ contractId: resolvedContractId, result });
   } catch (error: any) {
+    if (req.aiSignal?.aborted) return;
     console.error('upgrade-path-recommendation error:', error);
-    res.status(500).json({ error: error.message || 'Upgrade path recommendation failed' });
+    res.status(error.status === 503 ? 503 : 502).json({ error: error.message || 'Upgrade path recommendation failed' });
   }
 });
 
 // ─── POST /api/ai/formal-verification-suggestion ──────────────────────────────
-router.post('/formal-verification-suggestion', async (req: AuthRequest, res: Response) => {
+router.post('/formal-verification-suggestion', async (req: AdvancedRequest, res: Response) => {
   try {
     if (!process.env.OPENROUTER_API_KEY) {
       return res.status(503).json({ error: 'AI provider not configured. Set OPENROUTER_API_KEY in backend/.env to enable this endpoint.' });
@@ -641,11 +660,13 @@ router.post('/formal-verification-suggestion', async (req: AuthRequest, res: Res
     }
     if (!code) return res.status(400).json({ error: 'sourceCode or contractId is required' });
     const props = Array.isArray(propertiesOfInterest) ? propertiesOfInterest : [];
-    const result = await AIService.formalVerificationSuggestions(code, props);
+    const result = await AIService.formalVerificationSuggestions(code, props, req.aiSignal);
+    req.aiSignal?.throwIfAborted();
     res.json({ contractId: resolvedContractId, result });
   } catch (error: any) {
+    if (req.aiSignal?.aborted) return;
     console.error('formal-verification-suggestion error:', error);
-    res.status(500).json({ error: error.message || 'Formal verification suggestion failed' });
+    res.status(error.status === 503 ? 503 : 502).json({ error: error.message || 'Formal verification suggestion failed' });
   }
 });
 

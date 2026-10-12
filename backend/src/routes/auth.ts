@@ -7,7 +7,7 @@ import { jwtSecret } from '../config/security';
 
 const router = Router();
 
-router.post('/login', async (req: Request, res: Response) => {
+const loginHandler = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -37,6 +37,15 @@ router.post('/login', async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
+};
+
+router.post('/login', loginHandler);
+router.post('/demo-login', (req: Request, res: Response) => {
+  const email = process.env.DEMO_EMAIL;
+  const password = process.env.DEMO_PASSWORD;
+  if (!email || !password) return res.status(503).json({ error: 'Demo login is not configured.' });
+  req.body = { email, password };
+  return loginHandler(req, res);
 });
 
 router.post('/register', async (req: Request, res: Response) => {

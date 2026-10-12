@@ -8,7 +8,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, demoLogin } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,9 +25,17 @@ export default function Login() {
     }
   };
 
-  const autoFill = () => {
-    setEmail(import.meta.env.VITE_DEMO_EMAIL || '');
-    setPassword(import.meta.env.VITE_DEMO_PASSWORD || '');
+  const handleDemoLogin = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      await demoLogin();
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Demo login failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -90,19 +98,17 @@ export default function Login() {
 
           <div className="mt-4">
             <button
-              onClick={autoFill}
+              type="button"
+              onClick={handleDemoLogin}
+              disabled={loading}
               className="w-full py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
             >
               <Zap className="w-4 h-4" />
-              Auto Fill Demo Credentials
+              Log In as Demo
             </button>
           </div>
 
-          <div className="mt-6 p-3 bg-emerald-50 rounded-lg">
-            <p className="text-xs text-emerald-700 font-medium">Demo Credentials</p>
-            <p className="text-xs text-emerald-600 mt-1">Email: admin@auditor.com</p>
-            <p className="text-xs text-emerald-600">Password: password</p>
-          </div>
+          <p className="mt-4 text-xs text-gray-500">Demo login uses the configured demo account. If unavailable, ask an administrator for access.</p>
         </div>
       </div>
     </div>

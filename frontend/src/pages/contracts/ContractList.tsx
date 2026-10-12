@@ -7,10 +7,14 @@ export default function ContractList() {
   const [contracts, setContracts] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get('/contracts').then(res => { setContracts(res.data); setLoading(false); });
+    api.get('/contracts')
+      .then(res => setContracts(res.data))
+      .catch(err => setError(err.message || 'Failed to load records'))
+      .finally(() => setLoading(false));
   }, []);
 
   const filtered = contracts.filter(c =>
@@ -38,6 +42,7 @@ export default function ContractList() {
           placeholder="Search contracts..." />
       </div>
 
+      {error && <p role="alert" className="mb-4 text-red-700">{error}</p>}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50"><tr>

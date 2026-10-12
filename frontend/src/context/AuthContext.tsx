@@ -13,6 +13,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
+  demoLogin: () => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -28,12 +29,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
 
+  const saveSession = (data: { token: string; user: User }) => {
+    setToken(data.token);
+    setUser(data.user);
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+  };
+
   const login = async (email: string, password: string) => {
     const res = await api.post('/auth/login', { email, password });
-    setToken(res.data.token);
-    setUser(res.data.user);
-    localStorage.setItem('token', res.data.token);
-    localStorage.setItem('user', JSON.stringify(res.data.user));
+    saveSession(res.data);
+  };
+
+  const demoLogin = async () => {
+    const res = await api.post('/auth/demo-login');
+    saveSession(res.data);
   };
 
   const logout = () => {
@@ -44,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ user, token, login, demoLogin, logout, isAuthenticated: !!token }}>
       {children}
     </AuthContext.Provider>
   );

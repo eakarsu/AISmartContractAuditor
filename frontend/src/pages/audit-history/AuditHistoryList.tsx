@@ -25,10 +25,14 @@ export default function AuditHistoryList() {
   const [history, setHistory] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get('/audit-history').then(res => { setHistory(res.data); setLoading(false); });
+    api.get('/audit-history')
+      .then(res => setHistory(res.data))
+      .catch(err => setError(err.message || 'Failed to load records'))
+      .finally(() => setLoading(false));
   }, []);
 
   const filtered = history.filter(h =>
@@ -50,6 +54,7 @@ export default function AuditHistoryList() {
           placeholder="Search history..." />
       </div>
 
+      {error && <p role="alert" className="mb-4 text-red-700">{error}</p>}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50"><tr>

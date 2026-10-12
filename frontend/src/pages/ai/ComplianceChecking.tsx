@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import NativeSourcePresets, { sourceExamples } from '../../components/NativeSourcePresets';
 import api from '../../api/client';
 import { CheckCircle, Loader2 } from 'lucide-react';
-import { ComplianceCheckResult } from '../../components/AIResultDisplay';
+import GeneratedAiResponse from '../GeneratedAiResponse';
 
 export default function ComplianceChecking() {
   const [contracts, setContracts] = useState<any[]>([]);
@@ -18,6 +19,14 @@ export default function ComplianceChecking() {
     setContractId(id);
     const c = contracts.find(c => c.id === id);
     if (c) setSourceCode(c.sourceCode);
+  };
+
+  const fillExample = (index: number) => {
+    const selected = contracts.find(c => String(c.id) === String(contractId));
+    if (!selected) { setContractId(''); setSourceCode(sourceExamples[index].source); }
+    else { setSourceCode(selected.sourceCode); }
+    setStandard(sourceExamples[index].standard);
+    setResult(null); setError('');
   };
 
   const handleSubmit = async () => {
@@ -37,6 +46,7 @@ export default function ComplianceChecking() {
         <p className="text-gray-500 mt-1">Check smart contracts against ERC standards</p>
       </div>
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <NativeSourcePresets disabled={loading} onFill={fillExample} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Select Contract</label>
@@ -66,7 +76,7 @@ export default function ComplianceChecking() {
         </button>
       </div>
       {error && <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">{error}</div>}
-      {result && <ComplianceCheckResult data={result} />}
+      {result && <GeneratedAiResponse response={result} />}
     </div>
   );
 }

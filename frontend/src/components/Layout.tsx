@@ -1,3 +1,4 @@
+import AIReportLibrary from "./AIReportLibrary";
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -132,7 +133,7 @@ export default function Layout() {
             <LogOut className="w-4 h-4" /> Sign Out
           </button>
         </div>
-      </aside>
+      <AIReportLibrary /></aside>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">

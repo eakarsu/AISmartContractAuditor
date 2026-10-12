@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import GeneratedAiResponse from './GeneratedAiResponse';
 
 export default function OracleDependencyRisk() {
   const [data, setData] = useState<any>({ summary: {}, dependencies: [] });
@@ -30,7 +31,7 @@ export default function OracleDependencyRisk() {
           <button className="rounded bg-emerald-600 px-3 py-2 text-white" onClick={() => plan(item.id)}>Mitigate</button>
         </div>
       ))}
-      {mitigation && <pre className="rounded border bg-white p-4">{JSON.stringify(mitigation, null, 2)}</pre>}
+      {mitigation !== null && <GeneratedAiResponse response={mitigation} />}
     </div>
   );
 }

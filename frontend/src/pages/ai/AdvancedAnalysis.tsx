@@ -1,5 +1,5 @@
 import GeneratedAiResponse from '../GeneratedAiResponse';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import api from '../../api/client';
 import { Layers, Loader2 } from 'lucide-react';
 
@@ -38,6 +38,13 @@ const TOOLS: { id: Tool; label: string; description: string }[] = [
   },
 ];
 
+const MANUAL_SOURCE = '__manual__';
+const examples = [
+  { label: 'Simple counter', code: '// Fictional review example; never deployed.\npragma solidity ^0.8.24;\ncontract ExampleCounter { uint256 public count; function increment() external { count += 1; } }', functions: 'increment', origin: 'No claimed origin; compare only supplied source evidence', pattern: 'Non-upgradeable example; verify against supplied source', goal: 'Assess whether a reviewed redeployment is preferable; do not deploy or certify safety', properties: 'count never decreases, increment changes count by exactly one, arithmetic bounds' },
+  { label: 'Owner controls', code: '// Fictional review example; never deployed.\npragma solidity ^0.8.24;\ncontract ExampleSettings { address public immutable owner; uint256 public setting; constructor() { owner = msg.sender; } function set(uint256 value) external { require(msg.sender == owner, "owner required"); setting = value; } }', functions: 'set', origin: 'No verified fork relationship; identify evidence before attributing an origin', pattern: 'Non-upgradeable owner-controlled example; confirm code evidence', goal: 'Review access controls and migration assumptions; require independent review before changes', properties: 'only owner can change setting, owner remains immutable, setting reflects authorized input' },
+  { label: 'Storage review', code: '// Fictional review example; never deployed.\npragma solidity ^0.8.24;\ncontract ExampleRegistry { mapping(address => uint256) public entries; function setEntry(uint256 value) external { entries[msg.sender] = value; } }', functions: 'setEntry, entries', origin: 'No supplied parent contract; state uncertainty instead of inventing similarities', pattern: 'Non-upgradeable mapping example; verify storage layout from source', goal: 'Review storage layout, caller isolation and reversible migration planning; do not execute changes', properties: 'callers only write their own entry, other entries remain unchanged, getters match stored values' },
+];
+
 export default function AdvancedAnalysis() {
   const [tool, setTool] = useState<Tool>('contract-pattern-recognition');
   const [contracts, setContracts] = useState<any[]>([]);
@@ -52,30 +59,56 @@ export default function AdvancedAnalysis() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState('');
+  const [status, setStatus] = useState('');
+  const request = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    api.get('/contracts').then(res => setContracts(res.data)).catch(() => {});
+    const controller = new AbortController();
+    api.get('/contracts', { signal: controller.signal }).then(res => { if (!controller.signal.aborted) setContracts(res.data); }).catch(() => {});
+    return () => { controller.abort(); request.current?.abort(); request.current = null; };
   }, []);
 
   const handleContractSelect = (id: string) => {
     setContractId(id);
-    const c = contracts.find(c => c.id === id);
+    const c = contracts.find(c => String(c.id) === id);
     if (c) {
       setSourceCode(c.sourceCode);
       setLanguage(c.language === 'MOVE' ? 'Move' : 'Solidity');
     }
   };
 
+  const cancel = () => {
+    if (request.current) { request.current.abort(); request.current = null; setLoading(false); setResult(null); setError(''); setStatus('Request canceled. Your source remains available to edit.'); }
+    else { setResult(null); setError(''); setStatus(''); }
+  };
+
+  const fillExample = (index: number) => {
+    const example = examples[index], selected = contracts.find(c => String(c.id) === contractId);
+    const saved = selected || (contractId === MANUAL_SOURCE ? null : contracts[index % Math.max(contracts.length, 1)]);
+    setContractId(saved ? String(saved.id) : MANUAL_SOURCE);
+    const code = saved ? sourceCode && selected ? sourceCode : saved.sourceCode : example.code;
+    setSourceCode(code);
+    setLanguage(saved?.language === 'MOVE' ? 'Move' : 'Solidity');
+    const functions = [...new Set(Array.from(String(code).matchAll(/\bfunction\s+(\w+)/g), match => match[1]))];
+    setExpectedFunctions(saved ? functions.join(', ') || 'Review functions present in the supplied source' : example.functions);
+    setSimilarContractName(example.origin); setCurrentPattern(saved ? 'Unknown; identify the pattern from the supplied source evidence' : example.pattern); setTargetGoal(example.goal);
+    setPropertiesOfInterest(saved ? 'documented access control, preservation of supplied state invariants, arithmetic and storage bounds' : example.properties);
+    setResult(null); setError(''); setStatus(saved ? 'Saved contract source is preserved. Review the filled optional analysis inputs before generating.' : 'Every active input is filled with a fictional, undeployed source example. Review it before generating.');
+  };
+
   const handleSubmit = async () => {
-    if (!sourceCode.trim() && !contractId) {
+    if (request.current) return;
+    if (!sourceCode.trim() && (!contractId || contractId === MANUAL_SOURCE)) {
       setError('Provide source code or pick a contract.');
       return;
     }
     setLoading(true);
     setError('');
     setResult(null);
+    setStatus('');
+    const controller = new AbortController(); request.current = controller;
     try {
-      const body: any = { contractId: contractId || undefined };
+      const body: any = { contractId: contractId && contractId !== MANUAL_SOURCE ? contractId : undefined };
       if (sourceCode.trim()) body.sourceCode = sourceCode;
       if (tool === 'contract-pattern-recognition') body.language = language;
       if (tool === 'gas-estimation') {
@@ -96,9 +129,11 @@ export default function AdvancedAnalysis() {
           .filter(Boolean);
       }
 
-      const res = await api.post(`/ai/${tool}`, body);
+      const res = await api.post(`/ai/${tool}`, body, { signal: controller.signal });
+      if (controller.signal.aborted) return;
       setResult(res.data);
     } catch (err: any) {
+      if (controller.signal.aborted) return;
       const status = err?.response?.status;
       const msg = err?.response?.data?.error || err?.message || 'Analysis failed';
       if (status === 503) {
@@ -107,11 +142,10 @@ export default function AdvancedAnalysis() {
         setError(msg);
       }
     } finally {
-      setLoading(false);
+      if (request.current === controller) { request.current = null; setLoading(false); }
     }
   };
 
-  const active = TOOLS.find(t => t.id === tool)!;
 
   return (
     <div>
@@ -128,7 +162,7 @@ export default function AdvancedAnalysis() {
         {TOOLS.map(t => (
           <button
             key={t.id}
-            onClick={() => { setTool(t.id); setResult(null); setError(''); }}
+            onClick={() => { request.current?.abort(); request.current = null; setLoading(false); setTool(t.id); setResult(null); setError(''); setStatus(''); }}
             className={`text-left p-4 rounded-xl border transition-colors ${
               tool === t.id
                 ? 'bg-purple-600 text-white border-purple-600'
@@ -144,15 +178,20 @@ export default function AdvancedAnalysis() {
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <div className="flex flex-wrap gap-2 mb-4" aria-label="Complete examples">
+          {examples.map((example, index) => <button key={example.label} type="button" disabled={loading} onClick={() => fillExample(index)} className="border border-purple-200 rounded-lg px-3 py-2 text-sm text-purple-700 disabled:opacity-50">Fill: {example.label}</button>)}
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Select Contract</label>
             <select
+              disabled={loading}
               value={contractId}
               onChange={e => handleContractSelect(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
             >
               <option value="">-- Paste code manually --</option>
+              <option value={MANUAL_SOURCE}>Manual source example (no saved record)</option>
               {contracts.map(c => (
                 <option key={c.id} value={c.id}>
                   {c.name} ({c.language})
@@ -164,6 +203,7 @@ export default function AdvancedAnalysis() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
               <select
+                disabled={loading}
                 value={language}
                 onChange={e => setLanguage(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
@@ -181,6 +221,7 @@ export default function AdvancedAnalysis() {
                 Expected Functions <span className="text-gray-400">(comma-separated, optional)</span>
               </label>
               <input
+                disabled={loading}
                 value={expectedFunctions}
                 onChange={e => setExpectedFunctions(e.target.value)}
                 placeholder="transfer, approve, mint"
@@ -194,6 +235,7 @@ export default function AdvancedAnalysis() {
                 Suspected Origin <span className="text-gray-400">(optional)</span>
               </label>
               <input
+                disabled={loading}
                 value={similarContractName}
                 onChange={e => setSimilarContractName(e.target.value)}
                 placeholder="UniswapV2, Compound, ..."
@@ -208,6 +250,7 @@ export default function AdvancedAnalysis() {
                   Current Upgrade Pattern <span className="text-gray-400">(optional)</span>
                 </label>
                 <input
+                  disabled={loading}
                   value={currentPattern}
                   onChange={e => setCurrentPattern(e.target.value)}
                   placeholder="non-upgradeable / TransparentProxy / UUPS / ..."
@@ -219,6 +262,7 @@ export default function AdvancedAnalysis() {
                   Target Goal <span className="text-gray-400">(optional)</span>
                 </label>
                 <input
+                  disabled={loading}
                   value={targetGoal}
                   onChange={e => setTargetGoal(e.target.value)}
                   placeholder="add upgradeability with minimal risk"
@@ -233,6 +277,7 @@ export default function AdvancedAnalysis() {
                 Properties Of Interest <span className="text-gray-400">(comma-separated, optional)</span>
               </label>
               <input
+                disabled={loading}
                 value={propertiesOfInterest}
                 onChange={e => setPropertiesOfInterest(e.target.value)}
                 placeholder="totalSupply invariant, no-reentrancy, access control"
@@ -245,6 +290,7 @@ export default function AdvancedAnalysis() {
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">Source Code</label>
           <textarea
+            disabled={loading}
             value={sourceCode}
             onChange={e => setSourceCode(e.target.value)}
             rows={12}
@@ -259,8 +305,10 @@ export default function AdvancedAnalysis() {
           className="flex items-center gap-2 px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 font-medium transition-colors"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Layers className="w-4 h-4" />}
-          {loading ? 'Analyzing...' : `Run ${active.label}`}
+          {loading ? 'Analyzing...' : 'Generate with OpenRouter'}
         </button>
+        <button type="button" onClick={cancel} className="mt-3 border border-gray-300 rounded-lg px-4 py-2 text-sm">{loading ? 'Cancel request' : 'Cancel'}</button>
+        {status && <p role="status" className="mt-3 text-sm text-gray-600">{status}</p>}
       </div>
 
       {error && (

@@ -1,3 +1,4 @@
+import GeneratedAiResponse from '../pages/GeneratedAiResponse';
 import React, { useState } from 'react';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
@@ -345,13 +346,6 @@ export function ReentrancyDetectionResult({ data }: { data: any }) {
 }
 
 export function GenericAIResult({ data }: { data: any }) {
-  if (!data) return null;
-  if (data.rawResponse) {
-    return <div className="bg-white rounded-xl border p-6 whitespace-pre-wrap text-gray-700">{data.rawResponse}</div>;
-  }
-  return (
-    <div className="bg-white rounded-xl border p-6">
-      <pre className="text-sm text-gray-700 whitespace-pre-wrap">{JSON.stringify(data, null, 2)}</pre>
-    </div>
-  );
+  if (data === null || data === undefined) return null;
+  return <GeneratedAiResponse response={data} />;
 }
