@@ -48,6 +48,7 @@ app.use('/api/report-workspace', require("../aiWorkspace.cjs").createAIWorkspace
 app.use(/^\/api\/(?:gap-|ai-)/, authenticate, (_req, res) => res.status(503).json({
   error: 'Generated AI and gap routes are quarantined; use /api/contract-workflow', retryable: false,
 }));
+app.use('/api/feature-pack', require('../featurePack.cjs').createFeaturePackRouter(authenticate));
 app.use('/api/contracts', contractRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/audits', auditRoutes);
